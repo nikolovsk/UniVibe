@@ -10,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import com.univibe.backend.service.NewsletterService;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,9 +20,12 @@ import java.util.List;
 @Service
 public class EventServiceImpl implements EventService {
     private final EventJpaRepository eventJpaRepository;
+    private final NewsletterService newsletterService;
 
-    public EventServiceImpl(EventJpaRepository eventJpaRepository) {
+    public EventServiceImpl(EventJpaRepository eventJpaRepository,
+                            NewsletterService newsletterService) {
         this.eventJpaRepository = eventJpaRepository;
+        this.newsletterService = newsletterService;
     }
 
     @Override
@@ -39,7 +44,15 @@ public class EventServiceImpl implements EventService {
 
         event.setSource(EventSource.MANUAL);
 
-        return eventJpaRepository.save(event);
+        Event savedEvent = eventJpaRepository.save(event);
+
+        newsletterService.sendNewEventEmail(
+                savedEvent.getTitle(),
+                savedEvent.getDescription()
+        );
+
+        return savedEvent;
+
     }
 
     @Override
